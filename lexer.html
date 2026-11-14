@@ -75,8 +75,8 @@
   .modal .box { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 20px; max-width: 380px; }
   .modal .box p { margin: 0 0 16px; }
   @media (max-width: 760px) { .wrap { grid-template-columns: 1fr; } nav { border-right: 0; border-bottom: 1px solid var(--line); } main { padding: 16px; } }
-  .pages { display: flex; gap: 6px; margin: 0 12px 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
-  .pages a { flex: 1; text-align: center; padding: 6px 4px; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); text-decoration: none; font-size: 13px; }
+  .pages { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 0 12px 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+  .pages a { text-align: center; padding: 6px 4px; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); text-decoration: none; font-size: 13px; }
   .pages a:hover { color: var(--ink); }
   .pages a.cur { color: var(--ink); background: #232a35; border-color: #3d4552; font-weight: 500; }
   table.kw { width: auto; margin-top: 12px; }
@@ -168,7 +168,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;",
 
 function renderNav() {
   const nav = document.getElementById("nav");
-  nav.innerHTML = `<div class="pages"><a href="index.html">Inference</a><a href="lexer.html" class="cur">Lexer</a><a href="regex.html">Regex</a></div>`;
+  nav.innerHTML = `<div class="pages"><a href="index.html">Inference</a><a href="inference-v2.html">Skeleton</a><a href="lexer.html" class="cur">Lexer</a><a href="regex.html">Regex</a></div>`;
   QUESTIONS.forEach((q, k) => {
     const st = state[q.id];
     const b = document.createElement("button");

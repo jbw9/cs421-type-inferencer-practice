@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CS 421 Inference Skeleton Drill</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #14171c; --panel: #1b1f26; --ink: #e3e7ee; --muted: #8b95a7; --line: #2c323c;
+    --accent: #2f5fb3; --orange: #e8673f; --pass: #4cc38a; --pass-bg: #173226;
+    --fail: #f06a5f; --fail-bg: #35191a; --code-bg: #232831; color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "IBM Plex Sans", system-ui, sans-serif; color: var(--ink); background: var(--bg); font-size: 15px; }
+  header { background: #0e1116; border-bottom: 1px solid var(--line); color: #fff; padding: 10px 20px; display: flex; align-items: center; gap: 16px; }
+  header h1 { font-size: 16px; font-weight: 600; margin: 0; letter-spacing: .2px; }
+  header .total { margin-left: auto; font-family: "JetBrains Mono", monospace; font-size: 14px; }
+  header .status { font-size: 13px; opacity: .85; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #f5b041; margin-right: 6px; vertical-align: middle; }
+  .dot.ok { background: #58d68d; }
+  .wrap { display: grid; grid-template-columns: 240px 1fr; min-height: calc(100vh - 44px); }
+  nav { background: var(--panel); border-right: 1px solid var(--line); padding: 12px 0; }
+  nav button { display: flex; width: 100%; align-items: center; gap: 8px; border: 0; background: none; padding: 9px 16px; text-align: left; font: inherit; font-size: 14px; cursor: pointer; color: var(--ink); }
+  nav button:hover { background: var(--bg); }
+  nav button.active { background: #232a35; border-left: 3px solid var(--orange); padding-left: 13px; font-weight: 500; }
+  nav .num { color: var(--muted); font-family: "JetBrains Mono", monospace; font-size: 12px; width: 18px; }
+  nav .badge { margin-left: auto; font-family: "JetBrains Mono", monospace; font-size: 11px; padding: 2px 6px; border-radius: 10px; background: var(--code-bg); color: var(--muted); }
+  nav .badge.full { background: var(--pass-bg); color: var(--pass); }
+  nav .badge.bad { background: var(--fail-bg); color: var(--fail); }
+  nav .resetall { margin: 14px 16px 0; width: calc(100% - 32px); justify-content: center; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); font-size: 13px; }
+  main { padding: 20px 28px 60px; max-width: 1100px; min-width: 0; }
+  .wrap.collapsed { grid-template-columns: 1fr; }
+  .wrap.collapsed nav { display: none; }
+  .navtoggle { border: 1px solid var(--line); background: none; color: var(--ink); border-radius: 6px; padding: 3px 9px; font-size: 15px; cursor: pointer; }
+  .qhead { display: flex; align-items: baseline; gap: 12px; }
+  h2 { margin: 0 0 4px; font-size: 22px; font-weight: 600; }
+  .ctor { font-family: "JetBrains Mono", monospace; font-size: 13px; color: var(--muted); }
+  h3 { font-size: 14px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); margin: 22px 0 8px; font-weight: 600; }
+  pre { font-family: "JetBrains Mono", monospace; font-size: 13px; line-height: 1.45; background: var(--code-bg); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; margin: 0; overflow-x: auto; }
+  .note { color: var(--muted); font-size: 14px; margin: 8px 0 0; }
+  code { font-family: "JetBrains Mono", monospace; font-size: 12.5px; background: var(--code-bg); padding: 1px 4px; border-radius: 3px; }
+  details summary { cursor: pointer; color: var(--muted); font-size: 14px; margin: 10px 0 6px; }
+  .editor { border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: #282c34; }
+  .editor .cm-editor { height: 320px; font-size: 13.5px; }
+  .editor.big .cm-editor { height: 620px; }
+  .editor .cm-scroller { font-family: "JetBrains Mono", monospace; }
+  .editor.sol .cm-editor { height: auto; }
+  .actions { display: flex; gap: 10px; margin-top: 12px; align-items: center; flex-wrap: wrap; }
+  .btn { font: inherit; font-size: 14px; border-radius: 6px; padding: 8px 16px; cursor: pointer; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 500; }
+  .btn.primary:hover { background: #3a6fcc; }
+  .btn:hover { border-color: #3d4552; }
+  .btn.primary:disabled { opacity: .5; cursor: default; }
+  .btn.danger { color: var(--fail); }
+  .hint { font-size: 12.5px; color: var(--muted); }
+  .verdict { margin-top: 18px; padding: 14px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); }
+  .verdict.ok { border-color: var(--pass); background: var(--pass-bg); }
+  .verdict.no { border-color: var(--fail); background: var(--fail-bg); }
+  .verdict .big { font-size: 18px; font-weight: 600; }
+  .verdict pre { margin-top: 10px; background: #0f1115; }
+  mark { background: var(--fail); color: #fff; border-radius: 2px; padding: 0 1px; }
+  pre.out { background: #0f1115; color: #e6e6e6; max-height: 260px; overflow: auto; white-space: pre-wrap; }
+  pre.out.err { border-color: var(--fail); }
+  .modal { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: none; align-items: center; justify-content: center; z-index: 10; }
+  .modal.show { display: flex; }
+  .modal .box { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 20px; max-width: 380px; }
+  .modal .box p { margin: 0 0 16px; }
+  .pages { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 0 12px 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+  .pages a { text-align: center; padding: 6px 4px; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); text-decoration: none; font-size: 13px; }
+  .pages a:hover { color: var(--ink); }
+  .pages a.cur { color: var(--ink); background: #232a35; border-color: #3d4552; font-weight: 500; }
+  @media (max-width: 760px) { .wrap { grid-template-columns: 1fr; } nav { border-right: 0; border-bottom: 1px solid var(--line); } main { padding: 16px; } }
+</style>
+</head>
+<body>
+<header>
+  <button class="navtoggle" id="navToggle" title="Toggle sidebar" aria-label="Toggle sidebar">☰</button>
+  <h1>CS 421 · Inference Skeleton Drill <span style="opacity:.6;font-weight:400">type it from memory</span></h1>
+  <span class="status" id="status"><span class="dot" id="dot"></span><span id="statusText">Loading OCaml toplevel…</span></span>
+  <span class="total" id="total"></span>
+</header>
+<div class="wrap">
+  <nav id="nav"></nav>
+  <main id="main"></main>
+</div>
+<div class="modal" id="modal"><div class="box"><p id="modalText"></p>
+  <div class="actions"><button class="btn danger" id="modalYes">Reset</button><button class="btn" id="modalNo">Cancel</button></div></div></div>
+
+<script src="cm.js"></script>
+<script>
+// The exam file: ConstExp is given, every other case delegates to Plsolution
+// except the one being drilled, which goes at the bottom.
+const DELEGATE = {
+  VarExp: `      | VarExp x -> gather_exp_ty_substitution_VarExp x gamma tau gather_exp_ty_substitution`,
+  BinOpAppExp: `      | BinOpAppExp (binop, e1, e2)->
+            gather_exp_ty_substitution_BinOpAppExp (binop, e1, e2) gamma tau gather_exp_ty_substitution`,
+  IfExp: `      | IfExp (e1, e2, e3) -> gather_exp_ty_substitution_IfExp (e1, e2, e3) gamma tau gather_exp_ty_substitution`,
+  FunExp: `      | FunExp (x, e) -> gather_exp_ty_substitution_FunExp (x, e) gamma tau gather_exp_ty_substitution`,
+  AppExp: `      | AppExp (e1, e2) -> gather_exp_ty_substitution_AppExp (e1, e2) gamma tau gather_exp_ty_substitution`,
+  RaiseExp: `      | RaiseExp e -> gather_exp_ty_substitution_RaiseExp e gamma tau gather_exp_ty_substitution`,
+  LetInExp: `      | LetInExp (x, e1, e2) -> gather_exp_ty_substitution_LetInExp (x, e1, e2) gamma tau gather_exp_ty_substitution`,
+  LetRecInExp: `      | LetRecInExp (f, x, e1, e2) ->
+            gather_exp_ty_substitution_LetRecInExp (f, x, e1, e2) gamma tau gather_exp_ty_substitution`,
+  TryWithExp: `      | TryWithExp (e, intopt1, e1, match_list) ->
+            gather_exp_ty_substitution_TryWithExp (e, intopt1, e1, match_list) gamma tau gather_exp_ty_substitution`,
+  MonOpAppExp: `      | MonOpAppExp (monop, e1) ->
+            gather_exp_ty_substitution_MonOpAppExp (monop, e1) gamma tau gather_exp_ty_substitution`,
+};
+const PLACEHOLDER = id => `      (* write your ${id} case here *)`;
+function examFile(id, body) {
+  return `(* CS421 - Fall 2017
+ * gather_exp_ty_substitution_${id}
+ *)
+
+
+open Common
+open Plsolution
+
+let rec gather_exp_ty_substitution gamma exp tau =
+    let judgment = ExpJudgment(gamma, exp, tau) in
+    match exp
+    with ConstExp c ->
+         let tau' = const_signature c in
+         (match unify [(tau, freshInstance tau')]
+          with None       -> None
+             | Some sigma -> Some(Proof([],judgment), sigma))
+${Object.keys(DELEGATE).filter(k => k !== id).map(k => DELEGATE[k]).join("\n")}
+${body}
+      | _ -> raise (Failure "Not implemented yet")
+`;
+}
+// Stand-in for the course's compiled Plsolution: the reference cases, recursing through the caller's function.
+const PLSOLUTION = `module Plsolution = struct
+open Common
+let go e gamma tau rf = Solution.gather_case "" rf gamma e tau
+let gather_exp_ty_substitution_VarExp x = go (VarExp x)
+let gather_exp_ty_substitution_MonOpAppExp (o, e1) = go (MonOpAppExp (o, e1))
+let gather_exp_ty_substitution_BinOpAppExp (o, e1, e2) = go (BinOpAppExp (o, e1, e2))
+let gather_exp_ty_substitution_IfExp (a, b, c) = go (IfExp (a, b, c))
+let gather_exp_ty_substitution_FunExp (x, e) = go (FunExp (x, e))
+let gather_exp_ty_substitution_AppExp (a, b) = go (AppExp (a, b))
+let gather_exp_ty_substitution_RaiseExp e = go (RaiseExp e)
+let gather_exp_ty_substitution_LetInExp (x, a, b) = go (LetInExp (x, a, b))
+let gather_exp_ty_substitution_LetRecInExp (f, x, a, b) = go (LetRecInExp (f, x, a, b))
+let gather_exp_ty_substitution_TryWithExp (e, n, e1, l) = go (TryWithExp (e, n, e1, l))
+end;;
+`;
+
+const CASES = [
+  { id: "VarExp", ctor: "VarExp x", hint: "Look x up in gamma. Both branches return None.", ans:
+`  | VarExp x ->
+      (match lookup_env gamma x with
+       | None -> None
+       | Some tau' -> None)` },
+  { id: "MonOpAppExp", ctor: "MonOpAppExp (monop, e1)", hint: "1 fresh var. Recurse on e1 at tau1.", ans:
+`  | MonOpAppExp (monop, e1) ->
+      let tau1 = fresh() in
+      (match gather_exp_ty_substitution gamma e1 tau1 with
+       | None -> None
+       | Some(pf, sigma) -> None)` },
+  { id: "BinOpAppExp", ctor: "BinOpAppExp (binop, e1, e2)", hint: "2 fresh vars. Recurse on e1 at tau1.", ans:
+`  | BinOpAppExp (binop, e1, e2) ->
+      let tau1 = fresh() in
+      let tau2 = fresh() in
+      (match gather_exp_ty_substitution gamma e1 tau1 with
+       | None -> None
+       | Some(pf, sigma) -> None)` },
+  { id: "IfExp", ctor: "IfExp (e1, e2, e3)", hint: "No fresh vars. Recurse on e1 at bool_ty.", ans:
+`  | IfExp (e1, e2, e3) ->
+      (match gather_exp_ty_substitution gamma e1 bool_ty with
+       | None -> None
+       | Some(pf, sigma) -> None)` },
+  { id: "FunExp", ctor: "FunExp (x, e)", hint: "2 fresh vars. Recurse on e at tau2, in gamma extended with x : ([], tau1).", ans:
+`  | FunExp (x, e) ->
+      let tau1 = fresh() in
+      let tau2 = fresh() in
+      (match gather_exp_ty_substitution
+               (ins_env gamma x ([], tau1)) e tau2 with
+       | None -> None
+       | Some(pf, sigma) -> None)` },
+  { id: "AppExp", ctor: "AppExp (e1, e2)", hint: "1 fresh var. Recurse on e1 at tau1 -> tau (mk_fun_ty).", ans:
+`  | AppExp (e1, e2) ->
+      let tau1 = fresh() in
+      (match gather_exp_ty_substitution
+               gamma e1 (mk_fun_ty tau1 tau) with
+       | None -> None
+       | Some(pf, sigma) -> None)` },
+  { id: "RaiseExp", ctor: "RaiseExp e", hint: "No fresh vars. Recurse on e at int_ty.", ans:
+`  | RaiseExp e ->
+      (match gather_exp_ty_substitution gamma e int_ty with
+       | None -> None
+       | Some(pf, sigma) -> None)` },
+  { id: "LetInExp", ctor: "LetInExp (x, e1, e2)", hint: "1 fresh var. Recurse on e1 at tau1.", ans:
+`  | LetInExp (x, e1, e2) ->
+      let tau1 = fresh() in
+      (match gather_exp_ty_substitution gamma e1 tau1 with
+       | None -> None
+       | Some(pf, sigma) -> None)` },
+  { id: "LetRecInExp", ctor: "LetRecInExp (f, x, e1, e2)", hint: "2 fresh vars, fun_ty = tau1 -> tau2. gamma_body adds f : ([], fun_ty) then x : ([], tau1). Recurse on e1 at tau2.", ans:
+`  | LetRecInExp (f, x, e1, e2) ->
+      let tau1 = fresh() in
+      let tau2 = fresh() in
+      let fun_ty = mk_fun_ty tau1 tau2 in
+      let gamma_body =
+        ins_env (ins_env gamma f ([], fun_ty))
+                x ([], tau1) in
+      (match gather_exp_ty_substitution
+               gamma_body e1 tau2 with
+       | None -> None
+       | Some(pf, sigma) -> None)` },
+  { id: "TryWithExp", ctor: "TryWithExp (e, n1, e1, rest)", hint: "No fresh vars. Recurse on e at tau.", ans:
+`  | TryWithExp (e, n1, e1, rest) ->
+      (match gather_exp_ty_substitution gamma e tau with
+       | None -> None
+       | Some(pf, sigma) -> None)` },
+];
+for (const q of CASES) q.ans = q.ans.replace(/^/gm, "    ");
+const ITEMS = CASES;
+
+// ---------- storage (best-effort) ----------
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem("sk2:" + k)); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem("sk2:" + k, JSON.stringify(v)); } catch (e) {} },
+  del(k) { try { localStorage.removeItem("sk2:" + k); } catch (e) {} },
+};
+const fresh = id => ({ code: examFile(id, PLACEHOLDER(id)), result: null, ok: null });
+const state = {};
+for (const q of ITEMS) state[q.id] = store.get("q:" + q.id) || fresh(q.id);
+let current = (location.hash && ITEMS.find(q => "#" + q.id === location.hash)) ? location.hash.slice(1) : ITEMS[0].id;
+
+// ---------- OCaml worker ----------
+let worker, ready = false, pending = new Map(), nextId = 1, readyWaiters = [];
+function startWorker() {
+  ready = false;
+  setStatus(false, "Loading OCaml toplevel…");
+  worker = new Worker("worker.js");
+  worker.onmessage = (ev) => {
+    const m = ev.data;
+    if (m.type === "ready") {
+      ready = true; setStatus(true, "OCaml 4.14 ready");
+      readyWaiters.splice(0).forEach(f => f());
+    } else if (m.type === "result") {
+      const p = pending.get(m.id); pending.delete(m.id);
+      if (p) { clearTimeout(p.timer); p.resolve(m.out); }
+    }
+  };
+  worker.onerror = (e) => setStatus(false, "Worker error: " + (e.message || e));
+}
+function whenReady() { return ready ? Promise.resolve() : new Promise(r => readyWaiters.push(r)); }
+async function ocaml(code, print, timeoutMs = 10000) {
+  await whenReady();
+  return new Promise((resolve) => {
+    const id = nextId++;
+    const timer = setTimeout(() => { pending.delete(id); worker.terminate(); startWorker(); resolve("@@TIMEOUT"); }, timeoutMs);
+    pending.set(id, { resolve, timer });
+    worker.postMessage({ id, code, print });
+  });
+}
+function setStatus(ok, text) {
+  document.getElementById("dot").className = "dot" + (ok ? " ok" : "");
+  document.getElementById("statusText").textContent = text;
+}
+
+// ---------- token comparison ----------
+// Spacing, line breaks and comments don't matter; every identifier and symbol must match.
+function tokens(src) {
+  const clean = src.replace(/\(\*[\s\S]*?\*\)/g, m => " ".repeat(m.length));
+  return [...clean.matchAll(/[A-Za-z_][A-Za-z0-9_']*|\d+|->|::|\S/g)].map(m => ({ t: m[0], at: m.index }));
+}
+function compare(user, target) {
+  const a = tokens(user), b = tokens(target);
+  let i = 0;
+  while (i < a.length && i < b.length && a[i].t === b[i].t) i++;
+  if (i === a.length && i === b.length) return { ok: true };
+  const expectNext = b.slice(i, i + 10).map(x => x.t).join(" ") || "(end of answer)";
+  const ctxBefore = b.slice(Math.max(0, i - 6), i).map(x => x.t).join(" ");
+  let lineHtml;
+  if (i < a.length) {
+    const pos = a[i].at, ls = user.lastIndexOf("\n", pos - 1) + 1, le = user.indexOf("\n", pos);
+    const line = user.slice(ls, le < 0 ? undefined : le);
+    const off = pos - ls;
+    lineHtml = esc(line.slice(0, off)) + "<mark>" + esc(a[i].t) + "</mark>" + esc(line.slice(off + a[i].t.length));
+  } else lineHtml = "<mark>(your answer ends here)</mark>";
+  return { ok: false, lineHtml, ctxBefore, expectNext, got: i < a.length ? a[i].t : null };
+}
+
+// ---------- rendering ----------
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function renderNav() {
+  const nav = document.getElementById("nav");
+  nav.innerHTML = `<div class="pages"><a href="index.html">Inference</a><a href="inference-v2.html" class="cur">Skeleton</a><a href="lexer.html">Lexer</a><a href="regex.html">Regex</a></div>`;
+  ITEMS.forEach((q, k) => {
+    const st = state[q.id];
+    const b = document.createElement("button");
+    if (q.id === current) b.className = "active";
+    const badge = st.ok === true ? `<span class="badge full">✓</span>` : st.ok === false ? `<span class="badge bad">✗</span>` : `<span class="badge">–</span>`;
+    b.innerHTML = `<span class="num">${k + 1}</span><span>${esc(q.id)}</span>${badge}`;
+    b.onclick = () => { saveEditor(); current = q.id; try { history.replaceState(null, "", "#" + q.id); } catch (e) {} renderNav(); renderMain(); };
+    nav.appendChild(b);
+  });
+  const ra = document.createElement("button");
+  ra.className = "resetall"; ra.textContent = "Reset all";
+  ra.onclick = () => confirmBox("Clear every answer and score?", () => {
+    for (const q of ITEMS) { state[q.id] = fresh(q.id); store.del("q:" + q.id); }
+    renderNav(); renderMain();
+  });
+  nav.appendChild(ra);
+  const done = CASES.filter(q => state[q.id].ok).length;
+  document.getElementById("total").textContent = `${done}/${CASES.length} cases memorized`;
+}
+
+let view = null;
+function saveEditor() {
+  if (view) { state[current].code = view.state.doc.toString(); store.set("q:" + current, state[current]); }
+}
+
+function renderMain() {
+  const q = ITEMS.find(x => x.id === current);
+  const main = document.getElementById("main");
+  main.innerHTML = `
+    <div class="qhead"><h2>${esc(q.id)}</h2><span class="ctor">${esc(q.ctor)}</span></div>
+    <h3>Task</h3>
+    <div>Replace the <code>(* write your ${esc(q.id)} case here *)</code> line with the <code>| ${esc(q.ctor)} -&gt;</code> case of the skeleton, from memory. Everything else is the exam file as given; leave it as it is.</div>
+    <p class="note">Spacing, line breaks and comments don't matter, but names do: use the same variable names as the skeleton.</p>
+    <details><summary>Hint</summary><p class="note">${esc(q.hint)}</p></details>
+    <h3>Your code</h3>
+    <div class="editor big" id="editor"></div>
+    <div class="actions">
+      <button class="btn primary" id="check">Check</button>
+      <button class="btn danger" id="reset">Clear</button>
+      <button class="btn" id="showSol">Show answer</button>
+      <span class="hint">Ctrl/Cmd-Enter to check</span>
+    </div>
+    <div class="editor sol" id="sol" style="display:none;margin-top:12px"></div>
+    <div id="results"></div>`;
+
+  const C = window.CM;
+  view = new C.EditorView({
+    parent: document.getElementById("editor"),
+    state: C.EditorState.create({
+      doc: state[q.id].code,
+      extensions: [
+        C.basicSetup, C.keymap.of([C.indentWithTab, { key: "Mod-Enter", run: () => { check(); return true; } }]),
+        C.StreamLanguage.define(C.oCaml), C.oneDark,
+        C.EditorView.updateListener.of(u => { if (u.docChanged) { clearTimeout(window.__sv); window.__sv = setTimeout(saveEditor, 400); } }),
+      ],
+    }),
+  });
+  const ph = PLACEHOLDER(q.id).trim(), at = view.state.doc.toString().indexOf(ph);
+  if (at >= 0) view.dispatch({ selection: { anchor: at, head: at + ph.length }, scrollIntoView: true });
+  view.focus();
+
+  document.getElementById("check").onclick = check;
+  document.getElementById("reset").onclick = () => confirmBox(`Reset ${q.id} to the starting exam file?`, () => {
+    state[q.id] = fresh(q.id); store.del("q:" + q.id); renderNav(); renderMain();
+  });
+  document.getElementById("showSol").onclick = (e) => {
+    const s = document.getElementById("sol");
+    const show = s.style.display === "none";
+    s.style.display = show ? "block" : "none";
+    if (show && !s.firstChild) new C.EditorView({ parent: s, state: C.EditorState.create({ doc: q.ans, extensions: [
+      C.basicSetup, C.oneDark, C.EditorState.readOnly.of(true), C.EditorView.editable.of(false), C.StreamLanguage.define(C.oCaml)] }) });
+    e.target.textContent = show ? "Hide answer" : "Show answer";
+  };
+  renderResults();
+}
+
+function renderResults() {
+  const r = state[current].result;
+  const box = document.getElementById("results");
+  if (!r) { box.innerHTML = ""; return; }
+  let html;
+  if (r.match.ok) html = `<div class="verdict ok"><div class="big">✓ Matches the skeleton</div></div>`;
+  else html = `<div class="verdict no"><div class="big">✗ Differs from the skeleton</div>
+      <p class="note" style="color:var(--ink)">First difference in your code:</p><pre>${r.match.lineHtml}</pre>
+      <p class="note" style="color:var(--ink)">After <code>${esc(r.match.ctxBefore || "(start)")}</code> the skeleton continues with:</p>
+      <pre>${esc(r.match.expectNext)}</pre></div>`;
+  if (r.compileErr) html += `<h3>Compiler error</h3><pre class="out err">${esc(r.compile)}</pre>`;
+  else if (r.tests) html += `<h3>Points this earns</h3><p class="note">Run against the real test cases (the other cases filled in correctly): <b style="color:var(--ink)">${r.tests.pass}/${r.tests.total}</b> tests pass.</p>`;
+  box.innerHTML = html;
+}
+
+function countPasses(out) {
+  const lines = out.split("\n").filter(l => l.startsWith("@@T\t"));
+  return { pass: lines.filter(l => l.split("\t")[1] === "PASS").length, total: lines.length };
+}
+
+let checking = false;
+async function check() {
+  if (checking) return;
+  saveEditor();
+  const q = ITEMS.find(x => x.id === current);
+  const st = state[q.id];
+  const match = compare(st.code, examFile(q.id, q.ans));
+  st.ok = match.ok;
+  st.result = { match };
+  store.set("q:" + q.id, st);
+  renderNav(); renderResults();
+
+  const btn = document.getElementById("check");
+  checking = true; btn.disabled = true; btn.textContent = "Compiling…";
+  try {
+    await ocaml(PLSOLUTION, false);
+    const compile = await ocaml(st.code.trim().replace(/;;\s*$/, "") + "\n;;", true);
+    const compileErr = /(^|\n)Error:|@@TIMEOUT/.test(compile);
+    let tests = null;
+    if (!compileErr) {
+      const out = await ocaml(`Grader.run gather_exp_ty_substitution ${JSON.stringify(q.id)};;`, false, 15000);
+      tests = countPasses(out === "@@TIMEOUT" ? "" : out);
+      if (!tests.total) tests = null;
+    }
+    st.result = { match, compileErr, compile: compile.trim(), tests };
+    store.set("q:" + q.id, st);
+  } finally {
+    checking = false;
+    if (current === q.id) { const b = document.getElementById("check"); if (b) { b.disabled = false; b.textContent = "Check"; } renderResults(); }
+  }
+}
+
+let modalYes = null;
+function confirmBox(text, onYes) {
+  document.getElementById("modalText").textContent = text;
+  modalYes = onYes;
+  document.getElementById("modal").classList.add("show");
+}
+document.getElementById("modalYes").onclick = () => { document.getElementById("modal").classList.remove("show"); if (modalYes) modalYes(); };
+document.getElementById("modalNo").onclick = () => document.getElementById("modal").classList.remove("show");
+
+const wrapEl = document.querySelector(".wrap");
+wrapEl.classList.toggle("collapsed", !!store.get("navCollapsed"));
+document.getElementById("navToggle").onclick = () => store.set("navCollapsed", wrapEl.classList.toggle("collapsed"));
+
+startWorker();
+renderNav();
+renderMain();
+</script>
+</body>
+</html>
