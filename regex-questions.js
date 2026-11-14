@@ -8,7 +8,7 @@
       prompt: `Consider the set of all strings over the alphabet ${set(["a", "b", "c"])} that represent sequences where every c is preceded by at least one a.`,
       examples: `EXAMPLES:<pre class="ex">ac, abcb, aabbcbc, acbbbbcc, aaaaabb.</pre>`,
       accept: ["ac", "abcb", "aabbcbc", "acbbbbcc", "aaaaabb"], reject: ["c", "bc", "bbcab"],
-      regex: "(E V b* V (b*a(a* V b* V c*)*))",
+      regex: "(E V b* V (b*a(aVbVc)*))",
       grammar: "S ::= epsilon | bS | aA\nA ::= epsilon | aA | bA | cA\nStart Symbol = S",
     },
     {
